@@ -1,0 +1,343 @@
+// prisma/schema.prisma - CONSERVATIVE VERSION (Safer)
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/* ===== ENUMS ===== */
+
+enum Role {
+  ADMIN
+  DOCTOR
+  NURSE
+  THERAPIST
+  PATIENT
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+  OTHER
+}
+
+enum AuthorRole {
+  DOCTOR
+  NURSE
+  THERAPIST
+}
+
+enum ReportType {
+  XRAY
+  SCAN
+  PATHOLOGY
+  LAB
+  OTHER
+}
+
+enum TreatmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+// NEW: Patient vital status for clinical dashboard
+enum VitalStatus {
+  STABLE
+  RECOVERING
+  UNSTABLE
+  CRITICAL
+}
+
+// NEW: Clinical task types
+enum TaskType {
+  VITAL_CHECK
+  MEDICATION
+  REVIEW
+  DOCUMENTATION
+  FOLLOW_UP
+  THERAPY_SESSION
+  DISCHARGE_PLANNING
+}
+
+// NEW: Task priority levels
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// NEW: Task status
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+/* ===== MODELS ===== */
+
+// Login accounts (staff + patients with portal access)
+model User {
+   id        Int       @id @default(autoincrement())
+  email     String    @unique
+  passwordHash String
+  fullName  String
+  staffId   String?   @unique  // NEW: Staff ID number (e.g., "DOC-2024-001")
+  role      Role
+  department String?  
+  shift     String?   
+  phone         String?   // Added field - ensure this exists! 
+   isActive      Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+   lastLogin     DateTime?
+
+  // Relations
+  patient   Patient?  
+
+  vitalsRecorded            PatientVital[]      @relation("VitalsRecordedBy")
+  progressNotes             ProgressNote[]      @relation("ProgressNoteAuthor")
+  diagnosticReportsOrdered  DiagnosticReport[]  @relation("DiagnosticReportOrderedBy")
+  treatmentPlansCreated     TreatmentPlan[]     @relation("TreatmentPlanCreatedBy")
+  dischargeSummariesCreated DischargeSummary[]  @relation("DischargeSummaryCreatedBy")
+  appointmentsAsStaff       Appointment[]       @relation("AppointmentStaff")
+  
+  // NEW: Clinical dashboard relations
+  assignedTasks             Task[]              @relation("TaskAssignee")
+  tasksCreated              Task[]              @relation("TaskCreator")
+  staffAssignments          StaffAssignment[]   @relation("StaffAssignments")
+}
+
+// Patient demographics and identity
+model Patient {
+  id                     Int       @id @default(autoincrement())
+  userId                 Int?      @unique
+  patientCode            String    @unique
+  firstName              String
+  lastName               String
+  sex                    Sex
+  dateOfBirth            DateTime
+  age                    Int?
+  maritalStatus          MaritalStatus?
+  phone                  String
+  address                String
+  employerName           String?
+  employerAddress        String?
+  nextOfKinName          String?
+  nextOfKinRelationship  String?
+  nextOfKinPhone         String?
+  bloodGroup             String?
+  
+  // NEW: Location and status fields for clinical dashboard
+  roomNumber             String?
+  bedNumber              String?
+  admissionDate          DateTime?
+  dischargeDate          DateTime?
+  vitalStatus            VitalStatus    @default(STABLE)
+  isActive               Boolean        @default(true)
+  
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @default(now()) @updatedAt
+
+  user                   User?     @relation(fields: [userId], references: [id])
+
+  vitals                 PatientVital[]
+  progressNotes          ProgressNote[]
+  diagnosticReports      DiagnosticReport[]
+  treatmentPlans         TreatmentPlan[]
+  dischargeSummaries     DischargeSummary[]
+  appointments           Appointment[]
+  
+  // NEW: Clinical dashboard relations
+  tasks                  Task[]              @relation("PatientTasks")
+  staffAssignments       StaffAssignment[]   @relation("PatientAssignments")
+}
+
+// NEW: Staff-Patient assignments (NEW TABLE - won't affect existing)
+model StaffAssignment {
+  id         Int      @id @default(autoincrement())
+  staffId    Int
+  patientId  Int
+  role       Role     
+  assignedAt DateTime @default(now())
+  isPrimary  Boolean  @default(false)
+  
+  staff      User     @relation("StaffAssignments", fields: [staffId], references: [id])
+  patient    Patient  @relation("PatientAssignments", fields: [patientId], references: [id])
+  
+  @@unique([staffId, patientId])
+  @@index([staffId])
+  @@index([patientId])
+}
+
+// NEW: Clinical Tasks (NEW TABLE - won't affect existing)
+model Task {
+  id          Int          @id @default(autoincrement())
+  patientId   Int
+  assignedTo  Int          
+  createdBy   Int          
+  type        TaskType
+  title       String
+  description String?      @db.Text
+  priority    TaskPriority @default(NORMAL)
+  status      TaskStatus   @default(PENDING)
+  dueTime     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @default(now()) @updatedAt
+  
+  patient     Patient      @relation("PatientTasks", fields: [patientId], references: [id])
+  assignee    User         @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  creator     User         @relation("TaskCreator", fields: [createdBy], references: [id])
+  
+  @@index([assignedTo])
+  @@index([patientId])
+  @@index([status])
+  @@index([dueTime])
+}
+
+// Vitals like BP, heart rate, temperature
+model PatientVital {
+  id               Int       @id @default(autoincrement())
+  patientId        Int
+  recordedByUserId Int
+  bloodPressure    String?
+  heartRate        Int?
+  temperature      Float?
+  respiratoryRate  Int?      // NEW
+  oxygenSaturation Int?      // NEW
+  weight           Float?    // NEW
+  height           Float?    // NEW
+  bmi              Float?    // NEW
+  painScore        Int?      // NEW
+  recordedAt       DateTime  @default(now())
+  notes            String?   @db.Text  // NEW
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @default(now()) @updatedAt
+
+  patient          Patient   @relation(fields: [patientId], references: [id])
+  recordedBy       User      @relation("VitalsRecordedBy", fields: [recordedByUserId], references: [id])
+}
+
+// Progress notes from doctor, nurse, therapist
+model ProgressNote {
+  id           Int         @id @default(autoincrement())
+  patientId    Int
+  authorUserId Int
+  authorRole   AuthorRole
+  note         String      @db.Text
+  noteType     String?     @default("GENERAL") // NEW
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @default(now()) @updatedAt
+
+  patient      Patient     @relation(fields: [patientId], references: [id])
+  author       User        @relation("ProgressNoteAuthor", fields: [authorUserId], references: [id])
+}
+
+// Diagnostic reports: X-ray, scans, pathology, lab, etc.
+model DiagnosticReport {
+  id              Int          @id @default(autoincrement())
+  patientId       Int
+  orderedByUserId Int?
+  reportType      ReportType
+  title           String
+  description     String?      @db.Text
+  fileUrl         String?
+  resultDate      DateTime?    // NEW
+  isCritical      Boolean      @default(false)  // NEW
+  acknowledgedAt  DateTime?    // NEW
+  acknowledgedBy  Int?         // NEW
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @default(now()) @updatedAt
+
+  patient         Patient      @relation(fields: [patientId], references: [id])
+  orderedBy       User?        @relation("DiagnosticReportOrderedBy", fields: [orderedByUserId], references: [id])
+}
+
+// Treatment plan for a patient
+model TreatmentPlan {
+  id              Int             @id @default(autoincrement())
+  patientId       Int
+  createdByUserId Int
+  title           String?         // NEW
+  description     String          @db.Text
+  startDate       DateTime
+  endDate         DateTime?
+  status          TreatmentStatus @default(ACTIVE)
+  priority        String?         @default("NORMAL") // NEW
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt
+
+  patient         Patient         @relation(fields: [patientId], references: [id])
+  createdBy       User            @relation("TreatmentPlanCreatedBy", fields: [createdByUserId], references: [id])
+}
+
+// Discharge summary + follow-up plan
+model DischargeSummary {
+  id                   Int       @id @default(autoincrement())
+  patientId            Int
+  createdByUserId      Int
+  admissionDate        DateTime?
+  dischargeDate        DateTime
+  dischargeType        String?   @default("REGULAR") // NEW
+  summary              String    @db.Text
+  diagnosis            String?   @db.Text  // NEW
+  procedures           String?   @db.Text  // NEW
+  medicationsOnDischarge String?   @db.Text // NEW
+  followUpPlan         String?   @db.Text
+  followUpDate         DateTime? // NEW
+  warnings             String?   @db.Text  // NEW
+  
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @default(now()) @updatedAt
+
+  patient              Patient   @relation(fields: [patientId], references: [id])
+  createdBy            User      @relation("DischargeSummaryCreatedBy", fields: [createdByUserId], references: [id])
+}
+
+// Appointments (for scheduling & reminders)
+model Appointment {
+  id                  Int               @id @default(autoincrement())
+  patientId           Int
+  staffUserId         Int
+  appointmentDateTime DateTime
+  endTime             DateTime?         // NEW
+  reason              String?
+  status              AppointmentStatus @default(SCHEDULED)
+  priority            String?           @default("NORMAL") // NEW
+  appointmentType     String?           @default("CONSULTATION") // NEW
+  notes               String?           @db.Text  // NEW
+  checkedInAt         DateTime?         // NEW
+  startedAt           DateTime?         // NEW
+  completedAt         DateTime?         // NEW
+  reminderSent        Boolean           @default(false)
+  
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @default(now()) @updatedAt
+
+  patient             Patient           @relation(fields: [patientId], references: [id])
+  staff               User              @relation("AppointmentStaff", fields: [staffUserId], references: [id])
+}
