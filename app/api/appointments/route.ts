@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const allowedRoles = [Role.ADMIN, Role.DOCTOR, Role.NURSE, Role.THERAPIST];
-    if (!allowedRoles.includes(user.role)) {
+    const allowedRoles = [Role.ADMIN, Role.DOCTOR, Role.NURSE, Role.THERAPIST] as const;
+    if (!allowedRoles.includes(user.role as 'ADMIN' | 'DOCTOR' | 'NURSE' | 'THERAPIST')) {
       return NextResponse.json(
         { success: false, error: "Not authorized" },
         { status: 403 }

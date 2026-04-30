@@ -197,13 +197,13 @@ export default function PatientDashboardPage() {
         plansRes,
         appointmentsRes
       ] = await Promise.all([
-        apiFetch(`/api/patients/${patientId}`),
-        apiFetch(`/api/patients/${patientId}/vitals?pageSize=50`).catch(() => ({ data: [] })),
-        apiFetch(`/api/patients/${patientId}/progress-notes?pageSize=50`).catch(() => ({ data: [] })),
-        apiFetch(`/api/patients/${patientId}/diagnostic-reports?pageSize=50`).catch(() => ({ data: [] })),
-        apiFetch(`/api/patients/${patientId}/discharge-summaries?pageSize=50`).catch(() => ({ data: [] })),
-        apiFetch(`/api/patients/${patientId}/treatment-plans?pageSize=50`).catch(() => ({ data: [] })),
-        apiFetch(`/api/appointments?patientId=${patientId}&pageSize=50`).catch(() => ({ data: [] })),
+        apiFetch<{ data: any }>(`/api/patients/${patientId}`),
+        apiFetch<{ data: any[] }>(`/api/patients/${patientId}/vitals?pageSize=50`).catch(() => ({ data: [] })),
+        apiFetch<{ data: any[] }>(`/api/patients/${patientId}/progress-notes?pageSize=50`).catch(() => ({ data: [] })),
+        apiFetch<{ data: any[] }>(`/api/patients/${patientId}/diagnostic-reports?pageSize=50`).catch(() => ({ data: [] })),
+        apiFetch<{ data: any[] }>(`/api/patients/${patientId}/discharge-summaries?pageSize=50`).catch(() => ({ data: [] })),
+        apiFetch<{ data: any[] }>(`/api/patients/${patientId}/treatment-plans?pageSize=50`).catch(() => ({ data: [] })),
+        apiFetch<{ data: any[] }>(`/api/appointments?patientId=${patientId}&pageSize=50`).catch(() => ({ data: [] })),
       ]);
 
       setPatient(patientRes.data);

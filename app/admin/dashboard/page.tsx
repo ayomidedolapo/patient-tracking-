@@ -258,7 +258,7 @@ function RegisterStaffModal({
     setError("");
     
     try {
-      const res = await apiFetch("/api/auth/register", {
+       const res = await apiFetch<{ data: any }>("/api/auth/register", {
         method: "POST",
         body: JSON.stringify({
           fullName: form.fullName,

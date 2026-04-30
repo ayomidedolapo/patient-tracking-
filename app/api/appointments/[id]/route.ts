@@ -28,12 +28,9 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     }
 
     if (
-      ![
-        Role.ADMIN,
-        Role.DOCTOR,
-        Role.NURSE,
-        Role.THERAPIST,
-      ].includes(user.role)
+      ![Role.ADMIN, Role.DOCTOR, Role.NURSE, Role.THERAPIST].includes(
+        user.role as 'ADMIN' | 'DOCTOR' | 'NURSE' | 'THERAPIST'
+      )
     ) {
       return NextResponse.json(
         { success: false, error: "Not authorized" },

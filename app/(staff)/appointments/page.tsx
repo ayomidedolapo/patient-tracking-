@@ -276,16 +276,17 @@ export default function AppointmentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payload),
       });
-      const json: ApiResponse<Appointment> = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.error || `Failed (${res.status})`);
-      if (!json.data) throw new Error('Appointment response is missing data');
+       const json: ApiResponse<Appointment> = await res.json();
+       if (!res.ok || !json.success) throw new Error(json.error || `Failed (${res.status})`);
+       if (!json.data) throw new Error('Appointment response is missing data');
+       const appointment = json.data;
 
-      // ✅ Add/update in state immediately from API response
-      if (!editingAppointment) {
-        setAppointments(prev => [json.data, ...prev]);
-      } else {
-        setAppointments(prev => prev.map(a => a.id === json.data.id ? json.data : a));
-      }
+       // ✅ Add/update in state immediately from API response
+       if (!editingAppointment) {
+         setAppointments(prev => [appointment, ...prev]);
+       } else {
+         setAppointments(prev => prev.map(a => a.id === appointment.id ? appointment : a));
+       }
       closeModal();
     } catch (err: unknown) {
       setSaveError(getErrorMessage(err));
@@ -303,10 +304,11 @@ export default function AppointmentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ status: newStatus }),
       });
-      const json: ApiResponse<Appointment> = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.error || 'Failed');
-      if (!json.data) throw new Error('Appointment response is missing data');
-      setAppointments(prev => prev.map(a => a.id === json.data.id ? json.data : a));
+       const json: ApiResponse<Appointment> = await res.json();
+       if (!res.ok || !json.success) throw new Error(json.error || 'Failed');
+       if (!json.data) throw new Error('Appointment response is missing data');
+       const appointment = json.data;
+       setAppointments(prev => prev.map(a => a.id === appointment.id ? appointment : a));
       setStatusModalOpen(false);
       setSelectedAppointment(null);
     } catch (err: unknown) {

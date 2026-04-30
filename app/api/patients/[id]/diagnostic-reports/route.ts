@@ -73,7 +73,7 @@ export async function GET(
     // Fetch user info separately for each report
     const transformedReports = await Promise.all(
       reports.map(async (report) => {
-        const user = await getUserInfo(report.orderedByUserId);
+         const user = report.orderedByUserId ? await getUserInfo(report.orderedByUserId) : null;
         
         return {
           id: report.id,
@@ -298,7 +298,7 @@ export async function PATCH(
 
     // Get related data separately
     const patient = await prisma.patient.findUnique({ where: { id: patientId } });
-    const user = await getUserInfo(updated.orderedByUserId);
+    const user = updated.orderedByUserId ? await getUserInfo(updated.orderedByUserId) : null;
 
     const transformed = {
       id: updated.id,

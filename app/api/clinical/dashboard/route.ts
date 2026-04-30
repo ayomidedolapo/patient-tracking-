@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { getCurrentUserFromCookie, ADMIN_COOKIE_NAME, AUTH_COOKIE_NAME } from "@/lib/auth";
 import { headers } from "next/headers";
 import { Role, VitalStatus, TaskStatus, AppointmentStatus } from "@prisma/client";
@@ -78,6 +79,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Fetch full user details including department, shift, staffId
+    const fullUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        department: true,
+        shift: true,
+        staffId: true,
+      },
+    });
+
+    if (!fullUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
+    }
+
     // ── 1.5 Isolate the headers for internal fetches ──────────────────────────
     // Create a new Headers object and ONLY pass the specific cookie we just validated.
     // This prevents sub-routes from seeing the admin_token if a staff member is logged in.
@@ -130,7 +152,7 @@ export async function GET(request: NextRequest) {
     const stats = {
       totalMyPatients:      patients.length,
       criticalPatients:     patients.filter((p) => p.vitalStatus === VitalStatus.CRITICAL).length,
-      pendingTasks:         tasks.filter((t) => [TaskStatus.PENDING, TaskStatus.IN_PROGRESS].includes(t.status)).length,
+       pendingTasks:         tasks.filter((t) => [TaskStatus.PENDING, TaskStatus.IN_PROGRESS].includes(t.status as 'PENDING' | 'IN_PROGRESS')).length,
       completedTasksToday:  tasks.filter((t) => t.status === TaskStatus.COMPLETED && t.completedAt && new Date(t.completedAt).toDateString() === todayStr).length,
       appointmentsTodayTotal: todayAppointments.length,
       patientsSeenToday:    todayAppointments.filter((a) => a.status === AppointmentStatus.COMPLETED).length,
@@ -140,15 +162,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        me: {
-          id:         user.id,
-          fullName:   user.fullName,
-          email:      user.email,
-          role:       user.role,
-          department: user.department ?? null,
-          shift:      user.shift      ?? null,
-          staffId:    user.staffId    ?? null,
-        },
+         me: {
+           id:         fullUser.id,
+           fullName:   fullUser.fullName,
+           email:      fullUser.email,
+           role:       fullUser.role,
+           department: fullUser.department ?? null,
+           shift:      fullUser.shift      ?? null,
+           staffId:    fullUser.staffId    ?? null,
+         },
         patients,
         appointments,
         tasks,

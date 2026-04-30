@@ -75,7 +75,7 @@ export default function PatientLoginPage() {
       }
 
       // Store patient info
-      localStorage.setItem("patientId", matchedPatient.id);
+      localStorage.setItem("patientId", String(matchedPatient.id));
       localStorage.setItem("patientCode", matchedPatient.patientCode);
       localStorage.setItem(
         "patientName",

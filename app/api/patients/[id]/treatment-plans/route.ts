@@ -7,7 +7,7 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-const isStaff = (role: Role) => [Role.ADMIN, Role.DOCTOR, Role.NURSE, Role.THERAPIST].includes(role);
+const isStaff = (role: Role) => [Role.ADMIN, Role.DOCTOR, Role.NURSE, Role.THERAPIST].includes(role as 'ADMIN' | 'DOCTOR' | 'NURSE' | 'THERAPIST');
 
 // GET /api/patients/:id/treatment-plans
 export async function GET(req: NextRequest, context: RouteContext) {

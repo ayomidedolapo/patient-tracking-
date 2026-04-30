@@ -5,7 +5,7 @@ import { verifyToken } from "@/lib/auth";
 // GET /api/staff-assignments/by-patient/[patientId] - Get assigned staff for a patient
 export async function GET(
   request: NextRequest,
-  { params }: { params: { patientId: string } }
+  { params }: { params: Promise<{ patientId: string }> }
 ) {
   try {
     const user = verifyToken(request);
@@ -16,7 +16,8 @@ export async function GET(
       );
     }
 
-    const patientId = parseInt(params.patientId);
+    const { patientId: patientIdStr } = await params;
+    const patientId = parseInt(patientIdStr);
 
     // Check access
     const hasAccess = user.role === "ADMIN" || await prisma.staffAssignment.findFirst({

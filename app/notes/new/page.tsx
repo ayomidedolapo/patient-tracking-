@@ -124,7 +124,7 @@ const cardVariants = {
     opacity: 1, 
     y: 0, 
     scale: 1,
-    transition: { type: 'spring', stiffness: 350, damping: 28 }
+    transition: { type: 'spring' as const, stiffness: 350, damping: 28 }
   },
   exit: { 
     opacity: 0, 
@@ -136,7 +136,7 @@ const cardVariants = {
 
 const slideIn = {
   hidden: { x: -16, opacity: 0 },
-  show: { x: 0, opacity: 1, transition: { type: 'spring', stiffness: 400, damping: 30 } }
+  show: { x: 0, opacity: 1, transition: { type: 'spring' as const, stiffness: 400, damping: 30 } }
 };
 
 const fadeIn = {
