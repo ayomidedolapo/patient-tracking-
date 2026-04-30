@@ -209,7 +209,7 @@ export default function PatientLoginPage() {
       <AnimatePresence>
         {successOpen && (
           <>
-            {/* mobile: slide down from top */}
+            {/* mobile: slide down from topsy */}
             <motion.div
               initial={{ opacity: 0, y: -32 }}
               animate={{ opacity: 1, y: 0 }}
