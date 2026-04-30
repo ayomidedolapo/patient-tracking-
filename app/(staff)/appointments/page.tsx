@@ -539,7 +539,7 @@ export default function AppointmentsPage() {
                 {saveError && (
                   <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-sm text-rose-700 flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />{saveError}
-                    {/* ✅ If me failed, show inline retry inside the error */}
+                    {/* ✅ If me failed, show inline retry inside the errors */}
                     {!me && (
                       <button type="button" onClick={fetchMe} className="ml-auto flex items-center gap-1 text-rose-600 underline text-xs">
                         <RefreshCw className="w-3 h-3" /> Reload staff
