@@ -787,7 +787,7 @@ export default function StaffNotesPage() {
           </div>
         </div>
 
-        {/* FIX: Moved outside the hidden container and bumped z-index to 50 so it never hides behind the main window */}
+        {/* FIX: Moved outside the hidden container and bumped z-index to 50 so it never hides behind the main windows */}
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           className={`absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-14 ${t.editorBg} border ${t.border} rounded-r-xl flex items-center justify-center shadow-sm hover:shadow-md transition-all z-50`}
