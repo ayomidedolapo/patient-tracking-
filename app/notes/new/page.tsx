@@ -645,7 +645,7 @@ export default function StaffNotesPage() {
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </AnimatePresence>
 
-      {/* ═══ SIDEBAR ═══════════════════════════════════════════════ */}
+      {/* ═══ SIDEBARs ═══════════════════════════════════════════════ */}
       <motion.aside
         initial={false}
         animate={{ width: isSidebarCollapsed ? 72 : 340 }}
