@@ -227,7 +227,7 @@ function StaffRegistrationSuccessModal({
   );
 }
 
-// ─── Register Staff Modal ─────────────────────────────────────────────────────
+// ─── Register Staff Modals ─────────────────────────────────────────────────────
 
 function RegisterStaffModal({ 
   onClose, 
